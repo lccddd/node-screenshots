@@ -25,6 +25,9 @@ pub struct Window {
     /// The window x coordinate.
     #[napi(readonly)]
     pub y: i32,
+    /// The window z coordinate.
+    #[napi(readonly)]
+    pub z: i32,
     /// The window pixel width.
     #[napi(readonly)]
     pub width: u32,
@@ -50,6 +53,7 @@ impl Window {
             current_monitor: Monitor::new(&x_cap_window.current_monitor()),
             x: x_cap_window.x(),
             y: x_cap_window.y(),
+            z: x_cap_window.z(),
             width: x_cap_window.width(),
             height: x_cap_window.height(),
             is_minimized: x_cap_window.is_minimized(),

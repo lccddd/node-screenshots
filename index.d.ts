@@ -56,6 +56,8 @@ export declare class Window {
   readonly x: number
   /** The window x coordinate. */
   readonly y: number
+  /** The window z coordinate. */
+  readonly z: number
   /** The window pixel width. */
   readonly width: number
   /** The window pixel height. */

@@ -1,6 +1,6 @@
 use napi::{bindgen_prelude::AsyncTask, Env, Error, JsBuffer, Result, Task};
 use xcap::image::{
-    codecs::{bmp::BmpEncoder, jpeg::JpegEncoder, png::PngEncoder},
+    codecs::{ png::PngEncoder },
     DynamicImage, RgbaImage,
 };
 
@@ -17,8 +17,6 @@ fn bytes_to_buffer(env: Env, bytes: Vec<u8>, copy_output_data: Option<bool>) -> 
 #[derive(Debug, Clone, Copy, PartialEq)]
 enum Encoder {
     Png,
-    Jpeg,
-    Bmp,
     Raw,
 }
 
@@ -30,13 +28,7 @@ fn encode_image(rgba_image: &RgbaImage, encoder: Encoder) -> Result<Vec<u8>> {
     let mut bytes = Vec::new();
     let encoder = match encoder {
         Encoder::Png => rgba_image.write_with_encoder(PngEncoder::new(&mut bytes)),
-        Encoder::Jpeg => {
-            let dynamic_image = DynamicImage::from(rgba_image.clone());
-            let rgb_image = dynamic_image.to_rgb8();
-            rgb_image.write_with_encoder(JpegEncoder::new(&mut bytes))
-        }
-        Encoder::Bmp => rgba_image.write_with_encoder(BmpEncoder::new(&mut bytes)),
-        _ => unreachable!(),
+        Encoder::Raw =>  Ok({}),
     };
 
     encoder.map_err(|err| Error::from_reason(err.to_string()))?;
@@ -129,38 +121,6 @@ impl Image {
         AsyncTask::new(AsyncEncodeImage {
             rgba_image: self.rgba_image.clone(),
             encoder: Encoder::Png,
-            copy_output_data,
-        })
-    }
-
-    #[napi]
-    pub fn to_jpeg_sync(&self, env: Env, copy_output_data: Option<bool>) -> Result<JsBuffer> {
-        let bytes = encode_image(&self.rgba_image, Encoder::Jpeg)?;
-
-        bytes_to_buffer(env, bytes, copy_output_data)
-    }
-
-    #[napi]
-    pub fn to_jpeg(&self, copy_output_data: Option<bool>) -> AsyncTask<AsyncEncodeImage> {
-        AsyncTask::new(AsyncEncodeImage {
-            rgba_image: self.rgba_image.clone(),
-            encoder: Encoder::Jpeg,
-            copy_output_data,
-        })
-    }
-
-    #[napi]
-    pub fn to_bmp_sync(&self, env: Env, copy_output_data: Option<bool>) -> Result<JsBuffer> {
-        let bytes = encode_image(&self.rgba_image, Encoder::Bmp)?;
-
-        bytes_to_buffer(env, bytes, copy_output_data)
-    }
-
-    #[napi]
-    pub fn to_bmp(&self, copy_output_data: Option<bool>) -> AsyncTask<AsyncEncodeImage> {
-        AsyncTask::new(AsyncEncodeImage {
-            rgba_image: self.rgba_image.clone(),
-            encoder: Encoder::Bmp,
             copy_output_data,
         })
     }
